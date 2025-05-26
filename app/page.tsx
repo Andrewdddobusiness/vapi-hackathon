@@ -20,7 +20,7 @@ interface Transcript {
 export default function Home() {
   const [callStatus, setCallStatus] = useState<"idle" | "connecting" | "calling" | "ended">("idle");
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
-  const [detectedLanguage, setDetectedLanguage] = useState("EN");
+  const [detectedLanguage] = useState("EN");
   const [callStartTime, setCallStartTime] = useState<number | null>(null);
   const [callDuration, setCallDuration] = useState(0);
 
@@ -37,37 +37,64 @@ export default function Home() {
       setCallStartTime(null);
     };
 
-    const onError = (err: any) => {
+    // Add proper types for the error and message handlers
+    interface VapiError {
+      message: string;
+      [key: string]: unknown;
+    }
+
+    interface VapiMessage {
+      type: string;
+      text?: string;
+      message?: {
+        role: string;
+        content: string;
+      };
+    }
+
+    // Update the error handlers with proper types
+    const onError = (err: VapiError) => {
       console.error("Vapi error:", err);
       setCallStatus("idle");
     };
 
-    const onMessage = (msg: any) => {
+    const onMessage = (msg: VapiMessage) => {
       if (msg.type === "transcript" && msg.text) {
-        setTranscripts((prev) => [
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setTranscripts((prev: any) => [
           ...prev,
           { speaker: "user", text: msg.text, timestamp: new Date().toLocaleTimeString() },
         ]);
       } else if (msg.type === "message" && msg.message?.role === "assistant") {
         setTranscripts((prev) => [
           ...prev,
-          { speaker: "assistant", text: msg.message.content, timestamp: new Date().toLocaleTimeString() },
+          { speaker: "assistant", text: msg.message?.content || "", timestamp: new Date().toLocaleTimeString() },
         ]);
       }
     };
+
+    // Add transcript display to use the transcripts state
+    <div className="h-48 overflow-y-auto bg-white border border-gray-200 rounded p-3 mb-4">
+      {transcripts.map((t, i) => (
+        <div key={i} className="mb-2">
+          <span className="text-xs text-gray-400">{t.timestamp}</span>
+          <p className={`${t.speaker === "user" ? "text-blue-700" : "text-green-700"} text-base`}>
+            <strong>{t.speaker === "user" ? "You" : "Assistant"}:</strong> {t.text}
+          </p>
+        </div>
+      ))}
+    </div>;
 
     vapi.on("call-start", onCallStart);
     vapi.on("call-end", onCallEnd);
     vapi.on("error", onError);
     vapi.on("message", onMessage);
-    vapi.on("end-of-call-report", onCallEnd);
 
     return () => {
       vapi.off("call-start", onCallStart);
       vapi.off("call-end", onCallEnd);
       vapi.off("error", onError);
       vapi.off("message", onMessage);
-      vapi.off("end-of-call-report", onCallEnd);
     };
   }, []);
 
@@ -100,9 +127,9 @@ export default function Home() {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       await vapi.start(assistantId);
-    } catch (err: any) {
+    } catch (err: Error | unknown) {
       console.error("Start call error:", err);
-      alert("Could not start call: " + (err.message || err));
+      alert("Could not start call: " + (err instanceof Error ? err.message : String(err)));
       setCallStatus("idle");
     }
   };
