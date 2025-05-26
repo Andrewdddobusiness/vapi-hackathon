@@ -127,7 +127,6 @@ export default function Home() {
 
       {/* Hero */}
       <header className="flex flex-col items-center text-center mb-8">
-        <Image src="/apple-touch-icon.png" alt="GitHub" width={200} height={200} className="size-32 " />
         <HyperText className="text-5xl font-bold text-black mb-4">UniVoice</HyperText>
         <p className="text-gray-800">An AI UTS admissions agent ready to answer your questions.</p>
       </header>
