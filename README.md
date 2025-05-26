@@ -10,7 +10,6 @@ A browser-based demo of a multilingual University Admissions Voice Assistant bui
 
 - **Team / Creator:** Danh
 - **Category:** Creative Use Cases & Real-World Applications
-- **Prize Sought:** Up to \$15,000 + 100K Vapi minutes
 - **Demo Link:** [https://your-deployment-url.vercel.app](https://your-deployment-url.vercel.app)
 
 **Why UniVoice?**
